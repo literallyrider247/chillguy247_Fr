@@ -8,7 +8,7 @@ const bot = mineflayer.createBot({
   auth: 'offline',
   version: "1.21.11",
   loadInternalPlugins: false,
-  viewDistance: 1
+  viewDistance: 0
 });
 
 let movementPhase = 0;
