@@ -7,61 +7,30 @@ const bot = mineflayer.createBot({
   username: config.botUsername,
   auth: 'offline',
   version: "1.21.11",
-  loadInternalPlugins: false,
-  viewDistance: 0
+  checkTimeoutInterval: 60 * 1000, // Extends timeout windows
+  hideErrors: true
 });
 
-let movementPhase = 0;
-const STEP_INTERVAL = 1500;
-const STEP_SPEED    = 1;
-const JUMP_DURATION = 500;
+// Completely disables physics and world tracking to prevent addChunk packet crashes
+bot.on('inject_allowed', () => {
+  bot.world.getColumns = () => []
+  bot.world.getColumn = () => null
+  bot.world.getColumnAt = () => null
+})
 
 bot.on('spawn', () => {
+  console.log(`✅ ${config.botUsername} is Ready!`);
+  
+  // Enforces look down safety to avoid anti-cheat flag drops
   setTimeout(() => {
-    bot.setControlState('sneak', true);
-    console.log(`✅ ${config.botUsername} is Ready!`);
-  }, 3000);
-
-  setTimeout(movementCycle, STEP_INTERVAL);
+    bot.look(0, -1.5);
+  }, 1000);
 });
-
-function movementCycle() {
-  if (!bot.entity) return;
-
-  switch (movementPhase) {
-    case 0:
-      bot.setControlState('forward', true);
-      bot.setControlState('back', false);
-      bot.setControlState('jump', false);
-      break;
-    case 1:
-      bot.setControlState('forward', false);
-      bot.setControlState('back', true);
-      bot.setControlState('jump', false);
-      break;
-    case 2:
-      bot.setControlState('forward', false);
-      bot.setControlState('back', false);
-      bot.setControlState('jump', true);
-      setTimeout(() => {
-        bot.setControlState('jump', false);
-      }, JUMP_DURATION);
-      break;
-    case 3:
-      bot.setControlState('forward', false);
-      bot.setControlState('back', false);
-      bot.setControlState('jump', false);
-      break;
-  }
-
-  movementPhase = (movementPhase + 1) % 4;
-
-  setTimeout(movementCycle, STEP_INTERVAL);
-}
 
 bot.on('error', (err) => {
-  console.error('⚠️ Error:', err);
+  console.error('⚠️ Error:', err.message);
 });
-bot.on('end', () => {
-  console.log('⛔️ Bot Disconnected!');
+
+bot.on('end', (reason) => {
+  console.log('⛔️ Bot Disconnected! Reason:', reason);
 });
